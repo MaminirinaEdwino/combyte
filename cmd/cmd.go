@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Job struct {
@@ -153,7 +154,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 	jobs := make(chan Job, numWorkers)
 	results := make(chan Result, numWorkers)
 	var wg sync.WaitGroup
-
+	blockSize := compressionLevel * 1024 
 	for range numWorkers {
 		wg.Go(func() {
 			for job := range jobs {
@@ -169,7 +170,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 	}
 
 	go func() {
-		blockSize := compressionLevel * 1024 
+		
 		counter := 0
 		for {
 			buf := make([]byte, blockSize)
@@ -187,6 +188,9 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 		close(results)
 	}()
 
+	var totalByteTreated int64
+	start := time.Now()
+
 	pending := make(map[int][]byte)
 	nextID := 0
 	for res := range results {
@@ -196,12 +200,18 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 				w.Write(data)
 				delete(pending, nextID)
 				nextID++
-				fmt.Printf("\rBlocs terminés : %d", nextID)
+				totalByteTreated+=int64(blockSize)
+				elapsed := time.Since(start).Seconds()
+				if elapsed > 0 {
+					mbps := float64(totalByteTreated)/ float64(blockSize) / elapsed
+					fmt.Printf("\rBlocs terminés : %d \tDebit : %.2f Mo/s", nextID, mbps)
+				}
 			} else {
 				break
 			}
 		}
 	}
+	fmt.Println()
 }
 
 func DecompressFile(file *os.File, destFile string) {
