@@ -204,9 +204,9 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 	}
 }
 
-func DecompressFile(file *os.File) {
+func DecompressFile(file *os.File, destFile string) {
 
-	extractedFile, _ := os.Create("extracted_res.txt")
+	extractedFile, _ := os.Create(destFile)
 	defer extractedFile.Close()
 
 	reader := bufio.NewReader(file)
@@ -240,5 +240,9 @@ func Compress(filename string, compressionLevel int){
 	defer writer.Flush()
 
 	CompressFile(reader, writer, compressionLevel)
+}
 
+func Extract(filename string) {
+	source, _ := os.Open(filename)
+	DecompressFile(source, strings.Replace(filename, ".combyte", ".txt", 1))
 }
