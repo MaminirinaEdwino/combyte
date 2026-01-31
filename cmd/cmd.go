@@ -126,17 +126,15 @@ func PackBitsDecode(input []byte) []byte {
 	var out []byte
 	i := 0
 	for i < len(input) {
-		header := int8(input[i]) // On lit le compteur comme un entier signé
+		header := int8(input[i]) 
 		i++
 
 		if header >= 0 {
-			// Données littérales : copier (header + 1) octets
 			count := int(header) + 1
 			if i+count > len(input) { break }
 			out = append(out, input[i:i+count]...)
 			i += count
 		} else if header != -128 {
-			// Données répétées : répéter l'octet suivant (-header + 1) fois
 			count := int(-header) + 1
 			if i >= len(input) { break }
 			val := input[i]
@@ -145,12 +143,11 @@ func PackBitsDecode(input []byte) []byte {
 				out = append(out, val)
 			}
 		}
-		// -128 est ignoré (NOP)
 	}
 	return out
 }
 
-func CompressFile(r io.Reader, w io.Writer) {
+func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 	numWorkers := runtime.NumCPU() 
 	jobs := make(chan Job, numWorkers)
 	results := make(chan Result, numWorkers)
@@ -171,7 +168,7 @@ func CompressFile(r io.Reader, w io.Writer) {
 	}
 
 	go func() {
-		blockSize := 4 * 1024 
+		blockSize := compressionLevel * 1024 
 		counter := 0
 		for {
 			buf := make([]byte, blockSize)
@@ -212,8 +209,6 @@ func DecompressFile(file *os.File) {
 	defer extractedFile.Close()
 
 	reader := bufio.NewReader(file)
-
-	// fmt.Println(decodedData.IntBwt)
 	for {
 		var pIdx int32
 		var length int32
@@ -231,7 +226,6 @@ func DecompressFile(file *os.File) {
 		bwtData := PackBitsDecode(rleData)
 		realData := IBWT(bwtData, int(pIdx))
 		extractedFile.WriteString(string(realData))
-		// fmt.Printf("pIdx %d len %d len rle %d len bwt %d\n", pIdx, length, len(rleData), len(bwtData) )
 	}
-
 }
+

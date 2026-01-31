@@ -33,5 +33,4 @@ combyte --extract --filename="file.combyte"
 ```
 
 
-
-
+> For this Version it compress only .txt file, but the rest will come later
