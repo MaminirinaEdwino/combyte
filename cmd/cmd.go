@@ -140,7 +140,7 @@ func PackBitsDecode(input []byte) []byte {
 			if i >= len(input) { break }
 			val := input[i]
 			i++
-			for j := 0; j < count; j++ {
+			for range count {
 				out = append(out, val)
 			}
 		}
