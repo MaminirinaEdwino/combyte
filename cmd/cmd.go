@@ -5,7 +5,6 @@ import (
 	"sort"
 )
 
-
 func BWT(input []byte) ([]byte, int) {
 	n := len(input)
 	indices := make([]int, n)
@@ -70,4 +69,67 @@ func IBWT(bwt []byte, primaryIndex int) []byte {
 		}
 	}
 	return result
+}
+
+func PackBitsEncode(input []byte) []byte {
+	var out []byte
+	i := 0
+	n := len(input)
+
+	for i < n {
+		j := i
+		for j < n-1 && j-i < 127 && input[j] == input[j+1] {
+			j++
+		}
+
+		if j > i {
+			count := j - i + 1
+			out = append(out, byte(-(count - 1)))
+			out = append(out, input[i])
+			i = j + 1
+		} else {
+			j = i
+			for j < n-1 && j-i < 127 && (input[j] != input[j+1] || (j+2 < n && input[j] != input[j+2])) {
+				j++
+			}
+			if j == n-1 {
+				j = n
+			} else {
+				j++
+			}
+			count := j - i
+			out = append(out, byte(count-1))
+			out = append(out, input[i:j]...)
+			i = j
+		}
+	}
+	return out
+}
+
+func PackBitsDecode(input []byte) []byte {
+	var out []byte
+	i := 0
+	for i < len(input) {
+		header := int8(input[i]) // On lit le compteur comme un entier signé
+		i++
+
+		if header >= 0 {
+			// Données littérales : copier (header + 1) octets
+			count := int(header) + 1
+			if i+count > len(input) { break }
+			out = append(out, input[i:i+count]...)
+			i += count
+		} else if header != -128 {
+			// Données répétées : répéter l'octet suivant (-header + 1) fois
+			count := int(-header) + 1
+			if i >= len(input) { break }
+			val := input[i]
+			i++
+			for j := 0; j < count; j++ {
+				out = append(out, val)
+			}
+		}
+		// -128 est ignoré (NOP)
+	}
+	return out
 }
