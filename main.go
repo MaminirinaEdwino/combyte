@@ -35,6 +35,7 @@ func main() {
 		if *filename == "" {
 			break
 		}
+		cmd.Extract(*filename)
 	default : 
 		fmt.Println("Help documentation")
 	}

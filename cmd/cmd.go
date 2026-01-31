@@ -232,7 +232,7 @@ func DecompressFile(file *os.File, destFile string) {
 
 func Compress(filename string, compressionLevel int){
 	source, _ := os.Open(filename)
-	dest, _ := os.Create(strings.Replace(filename, ".txt", ".combyte", 1))
+	dest, _ := os.Create(filename+".combyte")
 	defer dest.Close()
 
 	reader :=  bufio.NewReader(source)
@@ -244,5 +244,5 @@ func Compress(filename string, compressionLevel int){
 
 func Extract(filename string) {
 	source, _ := os.Open(filename)
-	DecompressFile(source, strings.Replace(filename, ".combyte", ".txt", 1))
+	DecompressFile(source, strings.Replace(filename, ".combyte", "", 1))
 }
