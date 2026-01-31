@@ -8,6 +8,7 @@ import (
 const(
 	compressText = "This is the option for compressing a text file"
 	extractText = "This is the option for extracting a file .combyte"
+	compressionLevelText = "This option is for specifying the compression level that you want (it won't affect the extraction if you're worrie dabout it)"
 )
 
 func main() {
@@ -20,12 +21,14 @@ func main() {
 	e := flag.Bool("e", false, extractText)
 
 	filename := flag.String("filename", "", "THe file that you want to extract or compress")
+	compressionLevel := flag.Int("level", 3, compressionLevelText)
 	flag.Parse()
 	switch  {
 	case *compress || *c:
 		if *filename == "" {
 			break
 		}
+		fmt.Println(compressionLevel)
 	case *extract || *e:
 		if *filename == "" {
 			break
