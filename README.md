@@ -27,7 +27,7 @@ combyte --compress --filename="file.txt"
 ```
 
 2. Extract compressed a file : 
-
+Using the option `--extract` or `-e`
 ```bash
 combyte --extract --filename="file.combyte"
 ```
