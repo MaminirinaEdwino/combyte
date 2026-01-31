@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"os"
 	"runtime"
-	"slices"
 	"sort"
 	"sync"
 )
@@ -51,40 +52,39 @@ func BWT(input []byte) ([]byte, int) {
 }
 
 func IBWT(bwt []byte, primaryIndex int) []byte {
-	n := len(bwt)
-	if n == 0 {
-		return nil
-	}
+    n := len(bwt)
+    if n == 0 { return nil }
+    
+    // SÉCURITÉ : Vérifier l'index avant de commencer
+    if primaryIndex < 0 || primaryIndex >= n {
+        fmt.Printf("Erreur critique : Index %d hors limites pour bloc de %d\n", primaryIndex, n)
+        return nil 
+    }
 
-	firstCol := make([]byte, n)
-	copy(firstCol, bwt)
-	slices.Sort(firstCol)
+    // 1. Calculer les fréquences des caractères (plus rapide qu'un tri)
+    count := make([]int, 257)
+    for _, b := range bwt {
+        count[int(b)+1]++
+    }
+    for i := range 256 {
+        count[i+1] += count[i]
+    }
 
-	T := make([]int, n)
-	count := make(map[byte][]int)
-	for i, char := range bwt {
-		count[char] = append(count[char], i)
-	}
+    // 2. Construire le tableau T (LF-Mapping) en un seul passage
+    T := make([]int, n)
+    for i, b := range bwt {
+        T[count[b]] = i
+        count[b]++
+    }
 
-	curr := 0
-	for _, char := range firstCol {
-		T[curr] = count[char][0]
-		count[char] = count[char][1:]
-		curr++
-	}
-
-	result := make([]byte, n)
-	last := primaryIndex
-	for i := n - 1; i >= 0; i-- {
-		result[i] = bwt[last]
-		for j, val := range T {
-			if val == last {
-				last = j
-				break
-			}
-		}
-	}
-	return result
+    // 3. Reconstruire (SANS boucle imbriquée)
+    result := make([]byte, n)
+    curr := primaryIndex
+    for i := n - 1; i >= 0; i-- {
+        result[i] = bwt[curr]
+        curr = T[curr] // Un seul accès mémoire, pas de recherche !
+    }
+    return result
 }
 
 func PackBitsEncode(input []byte) []byte {
@@ -204,4 +204,34 @@ func CompressFile(r io.Reader, w io.Writer) {
 			}
 		}
 	}
+}
+
+func DecompressFile(file *os.File) {
+
+	extractedFile, _ := os.Create("extracted_res.txt")
+	defer extractedFile.Close()
+
+	reader := bufio.NewReader(file)
+
+	// fmt.Println(decodedData.IntBwt)
+	for {
+		var pIdx int32
+		var length int32
+
+		err := binary.Read(reader, binary.LittleEndian, &pIdx)
+		if err == io.EOF {
+			break
+		}
+
+		err = binary.Read(reader, binary.LittleEndian, &length)
+
+		rleData := make([]byte, length)
+		_, err = io.ReadFull(reader, rleData)
+		
+		bwtData := PackBitsDecode(rleData)
+		realData := IBWT(bwtData, int(pIdx))
+		extractedFile.WriteString(string(realData))
+		// fmt.Printf("pIdx %d len %d len rle %d len bwt %d\n", pIdx, length, len(rleData), len(bwtData) )
+	}
+
 }
