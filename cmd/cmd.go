@@ -1,8 +1,14 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"runtime"
 	"slices"
 	"sort"
+	"sync"
 )
 
 type Job struct {
@@ -142,4 +148,60 @@ func PackBitsDecode(input []byte) []byte {
 		// -128 est ignoré (NOP)
 	}
 	return out
+}
+
+func CompressFile(r io.Reader, w io.Writer) {
+	numWorkers := runtime.NumCPU() 
+	jobs := make(chan Job, numWorkers)
+	results := make(chan Result, numWorkers)
+	var wg sync.WaitGroup
+
+	for range numWorkers {
+		wg.Go(func() {
+			for job := range jobs {
+				bwt, pIdx := BWT(job.Data)
+				rle := PackBitsEncode(bwt)
+				buf := new(bytes.Buffer)
+				binary.Write(buf, binary.LittleEndian, int32(pIdx))
+				binary.Write(buf, binary.LittleEndian, int32(len(rle)))
+				buf.Write(rle)
+				results <- Result{ID: job.ID, Payload: buf.Bytes()}
+			}
+		})
+	}
+
+	go func() {
+		blockSize := 4 * 1024 
+		counter := 0
+		for {
+			buf := make([]byte, blockSize)
+			n, err := r.Read(buf)
+			if n > 0 {
+				jobs <- Job{ID: counter, Data: buf[:n]}
+				counter++
+			}
+			if err != nil {
+				break
+			}
+		}
+		close(jobs)
+		wg.Wait()
+		close(results)
+	}()
+
+	pending := make(map[int][]byte)
+	nextID := 0
+	for res := range results {
+		pending[res.ID] = res.Payload
+		for {
+			if data, ok := pending[nextID]; ok {
+				w.Write(data)
+				delete(pending, nextID)
+				nextID++
+				fmt.Printf("\rBlocs terminés : %d %d", nextID, nextID/len(results))
+			} else {
+				break
+			}
+		}
+	}
 }
