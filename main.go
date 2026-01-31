@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+
+	"github.com/MaminirinaEdwino/combyte/cmd"
 )
 
 const(
@@ -28,7 +30,7 @@ func main() {
 		if *filename == "" {
 			break
 		}
-		fmt.Println(compressionLevel)
+		cmd.Compress(*filename, *compressionLevel)
 	case *extract || *e:
 		if *filename == "" {
 			break

@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -229,3 +230,15 @@ func DecompressFile(file *os.File) {
 	}
 }
 
+func Compress(filename string, compressionLevel int){
+	source, _ := os.Open(filename)
+	dest, _ := os.Create(strings.Replace(filename, ".txt", ".combyte", 1))
+	defer dest.Close()
+
+	reader :=  bufio.NewReader(source)
+	writer := bufio.NewWriter(dest)
+	defer writer.Flush()
+
+	CompressFile(reader, writer, compressionLevel)
+
+}
