@@ -5,6 +5,16 @@ import (
 	"sort"
 )
 
+type Job struct {
+	ID   int
+	Data []byte
+}
+
+type Result struct {
+	ID      int
+	Payload []byte // Contient [pIdx + length + data]
+}
+
 func BWT(input []byte) ([]byte, int) {
 	n := len(input)
 	indices := make([]int, n)
