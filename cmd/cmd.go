@@ -196,7 +196,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 				w.Write(data)
 				delete(pending, nextID)
 				nextID++
-				fmt.Printf("\rBlocs terminés : %d %d", nextID, nextID/len(results))
+				fmt.Printf("\rBlocs terminés : %d", nextID)
 			} else {
 				break
 			}
