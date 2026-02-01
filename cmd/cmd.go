@@ -53,40 +53,49 @@ func BWT(input []byte) ([]byte, int) {
 	return result, primaryIndex
 }
 
+
 func IBWT(bwt []byte, primaryIndex int) []byte {
-    n := len(bwt)
-    if n == 0 { return nil }
-    
-    // SÉCURITÉ : Vérifier l'index avant de commencer
-    if primaryIndex < 0 || primaryIndex >= n {
-        fmt.Printf("Erreur critique : Index %d hors limites pour bloc de %d\n", primaryIndex, n)
-        return nil 
-    }
+	n := len(bwt)
+	if n == 0 {
+		return nil
+	}
 
-    // 1. Calculer les fréquences des caractères (plus rapide qu'un tri)
-    count := make([]int, 257)
-    for _, b := range bwt {
-        count[int(b)+1]++
-    }
-    for i := range 256 {
-        count[i+1] += count[i]
-    }
+	// 1. Compter les occurrences de chaque byte
+	// On utilise un tableau de 256 pour couvrir tous les octets possibles
+	count := make([]int, 256)
+	for _, b := range bwt {
+		count[b]++
+	}
 
-    // 2. Construire le tableau T (LF-Mapping) en un seul passage
-    T := make([]int, n)
-    for i, b := range bwt {
-        T[count[b]] = i
-        count[b]++
-    }
+	// 2. Calculer les positions de départ de chaque caractère dans la première colonne triée
+	// C'est ce qu'on appelle la table de cumul "C"
+	sum := 0
+	for i, c := range count {
+		count[i] = sum
+		sum += c
+	}
 
-    // 3. Reconstruire (SANS boucle imbriquée)
-    result := make([]byte, n)
-    curr := primaryIndex
-    for i := n - 1; i >= 0; i-- {
-        result[i] = bwt[curr]
-        curr = T[curr] // Un seul accès mémoire, pas de recherche !
-    }
-    return result
+	// 3. Construire le vecteur de transformation T (LF mapping)
+	// T[i] nous dit où se trouve le caractère bwt[i] dans la colonne triée
+	T := make([]int, n)
+	for i, b := range bwt {
+		T[count[b]] = i
+		count[b]++
+	}
+
+	// 4. Reconstruire la chaîne originale en remontant le cycle
+	// On part de l'index primaire et on suit les pointeurs de T
+	result := make([]byte, n)
+	var curr int
+	fmt.Println("test : ",len(T), primaryIndex, curr)
+	curr = T[primaryIndex]
+	
+	for i := range n {
+		result[i] = bwt[curr]
+		curr = T[curr]
+	}
+
+	return result
 }
 
 func PackBitsEncode(input []byte) []byte {
