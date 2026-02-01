@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	colortext "github.com/MaminirinaEdwino/colorText"
 	"github.com/MaminirinaEdwino/combyte/cmd"
@@ -17,9 +18,11 @@ const(
 
 func main() {
 	// fmt.Println("Combyte CLI")
+	fmt.Println(colortext.GreenString("By Edwino Maminirina"))
+	fmt.Println(colortext.GreenString("github.com/MaminirinaEdwino"))
 	myfigure := figure.NewColorFigure("COMBYTE CLI", "block", "BLUE", true)
 	myfigure.Print()	
-	fmt.Println(colortext.GreenString("By Edwino Maminirina"))
+	
 
 	compress := flag.Bool("compress", false, compressText)
 	c := flag.Bool("c", false, compressText)
@@ -37,7 +40,8 @@ func main() {
 		}
 		cmd.Compress(*filename, *compressionLevel)
 	case *extract || *e:
-		if *filename == "" {
+		if *filename == "" || !strings.Contains(*filename, ".combyte") {
+			fmt.Printf("%s is not a combyte file\n%s\n%s\n", colortext.RedText(*filename), colortext.RedText("Extraction aborted"),colortext.YellowText("Choose a valid file . . ."))
 			break
 		}
 		cmd.Extract(*filename)
