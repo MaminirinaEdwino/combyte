@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/MaminirinaEdwino/combyte/cmd"
+	"github.com/common-nighthawk/go-figure"
 )
 
 const(
@@ -14,8 +15,10 @@ const(
 )
 
 func main() {
-	fmt.Println("Combyte CLI")
-	
+	// fmt.Println("Combyte CLI")
+	myfigure := figure.NewColorFigure("COMBYTE CLI", "", "GREEN", true)
+	myfigure.Print()	
+
 	compress := flag.Bool("compress", false, compressText)
 	c := flag.Bool("c", false, compressText)
 
@@ -37,6 +40,7 @@ func main() {
 		}
 		cmd.Extract(*filename)
 	default : 
+		
 		fmt.Println("Help documentation")
 	}
 }

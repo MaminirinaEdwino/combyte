@@ -203,7 +203,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 				totalByteTreated+=int64(blockSize)
 				elapsed := time.Since(start).Seconds()
 				if elapsed > 0 {
-					mbps := float64(totalByteTreated)/ float64(blockSize) / elapsed
+					mbps := float64(totalByteTreated)/ float64(1024*1024) / elapsed
 					fmt.Printf("\rBlocs terminés : %d \tDebit : %.2f Mo/s", nextID, mbps)
 				}
 			} else {
