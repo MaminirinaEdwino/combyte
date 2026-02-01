@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 
+	colortext "github.com/MaminirinaEdwino/colorText"
+	colortext "github.com/MaminirinaEdwino/colorText/colorText"
 	"github.com/MaminirinaEdwino/combyte/cmd"
 	"github.com/common-nighthawk/go-figure"
 )
@@ -16,8 +18,9 @@ const(
 
 func main() {
 	// fmt.Println("Combyte CLI")
-	myfigure := figure.NewColorFigure("COMBYTE CLI", "", "GREEN", true)
+	myfigure := figure.NewColorFigure("COMBYTE CLI", "block", "BLUE", true)
 	myfigure.Print()	
+	fmt.Println(colortext.GreenString("By Edwino Maminirina"))
 
 	compress := flag.Bool("compress", false, compressText)
 	c := flag.Bool("c", false, compressText)
@@ -42,5 +45,16 @@ func main() {
 	default : 
 		
 		fmt.Println("Help documentation")
+		fmt.Println(`
+Command List
+	--compress --filename="file.txt"
+	--c --filename="file.txt"
+
+	--extract --filename="file.txt.combyte"
+	--e --filename="file.txt.combyte"
+
+	--compress or --c : Compression a file, followed by the option --filename
+	--extract or --e : Extract a file (.combyte file), followed by the option --filename
+		`)
 	}
 }
