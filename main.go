@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	colortext "github.com/MaminirinaEdwino/colorText"
-	colortext "github.com/MaminirinaEdwino/colorText/colorText"
 	"github.com/MaminirinaEdwino/combyte/cmd"
 	"github.com/common-nighthawk/go-figure"
 )
