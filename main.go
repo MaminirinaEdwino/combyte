@@ -42,7 +42,7 @@ func main() {
 		}
 		start := time.Now()
 		cmd.Compress(*filename, *compressionLevel)
-		fmt.Printf(colortext.BlueText("compression time : %s\n"), time.Since(start))
+		fmt.Printf(colortext.GreenString("compression time : %s\n"), time.Since(start))
 	case *extract || *e:
 		if *filename == "" || !strings.Contains(*filename, ".combyte") {
 			fmt.Printf("%s is not a combyte file\n%s\n%s\n", colortext.RedText(*filename), colortext.RedText("Extraction aborted"),colortext.YellowText("Choose a valid file . . ."))
