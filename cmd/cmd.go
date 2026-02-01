@@ -204,7 +204,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 				elapsed := time.Since(start).Seconds()
 				if elapsed > 0 {
 					mbps := float64(totalByteTreated)/ float64(1024*1024) / elapsed
-					fmt.Printf("\rCompiled Blocks : %d \tSpeed : %.2f Mo/s\tCompressed Block size : %.2f Mo\tElapsed Time : %s", nextID, mbps, (float64(totalByteTreated )* float64(blockSize))/ float64(1024*1024) ,time.Since(start))
+					fmt.Printf("\rCompressed Blocks : %d \tSpeed : %.2f Mo/s\t\tElapsed Time : %s", nextID, mbps ,time.Since(start))
 				}
 			} else {
 				break
