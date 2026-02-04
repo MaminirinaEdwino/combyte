@@ -23,7 +23,7 @@ func main() {
 	// fmt.Println("Combyte CLI")
 	fmt.Println(colortext.GreenString("By Edwino Maminirina"))
 	fmt.Println(colortext.GreenString("github.com/MaminirinaEdwino"))
-	myfigure := figure.NewColorFigure("COMBYTE CLI", "block", "BLUE", true)
+	myfigure := figure.NewColorFigure("COMBYTE CLI", "standard", "GREEN", true)
 	myfigure.Print()	
 	fmt.Println()
 	
