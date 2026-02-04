@@ -17,6 +17,8 @@ const(
 	compressionLevelText = "This option is for specifying the compression level that you want (it won't affect the extraction if you're worrie dabout it)"
 )
 
+
+
 func main() {
 	// fmt.Println("Combyte CLI")
 	fmt.Println(colortext.GreenString("By Edwino Maminirina"))

@@ -169,10 +169,15 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 			for job := range jobs {
 				bwt, pIdx := BWT(job.Data)
 				rle := PackBitsEncode(bwt)
+				lz78data, intlz78 := EncodeLZ78B(rle)
 				buf := new(bytes.Buffer)
 				binary.Write(buf, binary.LittleEndian, int32(pIdx))
-				binary.Write(buf, binary.LittleEndian, int32(len(rle)))
-				buf.Write(rle)
+				binary.Write(buf, binary.LittleEndian, int32(len(intlz78)))
+				binary.Write(buf, binary.LittleEndian, int32(len(lz78data)))
+				for i :=  range intlz78 {
+					binary.Write(buf, binary.LittleEndian, int32(intlz78[i]))
+				}
+				buf.Write(lz78data)
 				results <- Result{ID: job.ID, Payload: buf.Bytes()}
 			}
 		})
@@ -232,21 +237,104 @@ func DecompressFile(file *os.File, destFile string) {
 	for {
 		var pIdx int32
 		var length int32
+		var intDatalen int32
+		var intData []int
 
 		err := binary.Read(reader, binary.LittleEndian, &pIdx)
 		if err == io.EOF {
 			break
 		}
-
+		err = binary.Read(reader, binary.LittleEndian, &intData)
 		err = binary.Read(reader, binary.LittleEndian, &length)
+		for i := 0; i < int(intDatalen); i++ {
+			var tmp int32
 
-		rleData := make([]byte, length)
-		_, err = io.ReadFull(reader, rleData)
-		
+			err = binary.Read(reader, binary.LittleEndian, &tmp)
+			intData = append(intData, int(tmp))
+		}
+		lz78data := make([]byte, length)
+		_, err = io.ReadFull(reader, lz78data)
+		rleData := DecodeLZ78B(lz78data, intData)
 		bwtData := PackBitsDecode(rleData)
 		realData := IBWT(bwtData, int(pIdx))
 		extractedFile.WriteString(string(realData))
 	}
+}
+
+
+func CheckByteInTab(ByteTab [][]byte, curr []byte) bool {
+	for i := range ByteTab {
+		if bytes.Equal(ByteTab[i], curr) {
+			return true
+		}
+	}
+
+	return false
+}
+func GetByteIndexe(ByteTab [][]byte, cuur []byte) int {
+	for i := range len(ByteTab) {
+		if bytes.Equal(ByteTab[i], cuur) {
+			return i
+		}
+	}
+	return 0
+}
+
+func EncodeLZ78B(data []byte) ([]byte, []int) {
+	var ByteTab [][]byte
+	var Index []int
+	var EncodeByte []byte
+
+	var curr []byte
+
+	for i := range len(data) {
+		if !CheckByteInTab(ByteTab, curr) && len(curr) > 0 {
+			ByteTab = append(ByteTab, curr)
+			Index = append(Index, GetByteIndexe(ByteTab, curr[:len(curr)-1]))
+			EncodeByte = append(EncodeByte, curr[len(curr)-1])
+			curr = []byte{data[i]}
+		} else {
+			curr = append(curr, data[i])
+		}
+	}
+	Index = append(Index, GetByteIndexe(ByteTab, []byte{data[len(data)-1]}))
+	EncodeByte = append(EncodeByte, data[len(data)-1])
+
+	fmt.Println(string(EncodeByte))
+	fmt.Println(Index)
+	return EncodeByte, Index
+}
+
+func DecodeLZ78B(data []byte, index []int) ([]byte) {
+	var res [][]byte
+	for i := range data {
+		if index[i] > 0 {
+			tmp := []byte{}
+			if i < len(data)-1 {
+				t := res[index[i]]
+
+				// tmp = []byte{t..., data[i]}
+				for i := range t {
+					tmp = append(tmp, t[i])
+				}
+				tmp = append(tmp, data[i])
+			} else {
+				tmp = []byte{data[index[i]]}
+			}
+			res = append(res, tmp)
+		} else {
+			res = append(res, []byte{data[i]})
+		}
+	}
+	fmt.Println(string(res[len(res)-1]))
+	final := []byte{}
+	for i := range res {
+		fmt.Println(res[i])
+		final = append(final, res[i]...)
+	}
+	
+	fmt.Println(string(final), "Binary")
+	return final
 }
 
 func Compress(filename string, compressionLevel int){
