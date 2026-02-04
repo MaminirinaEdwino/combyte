@@ -87,7 +87,7 @@ func IBWT(bwt []byte, primaryIndex int) []byte {
 	// On part de l'index primaire et on suit les pointeurs de T
 	result := make([]byte, n)
 	var curr int
-	fmt.Println("test : ",len(T), primaryIndex, curr)
+	// fmt.Println("test : ",len(T), primaryIndex, curr)
 	curr = T[primaryIndex]
 	
 	for i := range n {
@@ -300,8 +300,6 @@ func EncodeLZ78B(data []byte) ([]byte, []int) {
 	Index = append(Index, GetByteIndexe(ByteTab, []byte{data[len(data)-1]}))
 	EncodeByte = append(EncodeByte, data[len(data)-1])
 
-	fmt.Println(string(EncodeByte))
-	fmt.Println(Index)
 	return EncodeByte, Index
 }
 
@@ -326,14 +324,12 @@ func DecodeLZ78B(data []byte, index []int) ([]byte) {
 			res = append(res, []byte{data[i]})
 		}
 	}
-	fmt.Println(string(res[len(res)-1]))
 	final := []byte{}
 	for i := range res {
-		fmt.Println(res[i])
 		final = append(final, res[i]...)
 	}
 	
-	fmt.Println(string(final), "Binary")
+	// fmt.Println(string(final), "Binary")
 	return final
 }
 
