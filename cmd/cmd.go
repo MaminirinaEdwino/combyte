@@ -167,17 +167,18 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 	for range numWorkers {
 		wg.Go(func() {
 			for job := range jobs {
-				bwt, pIdx := BWT(job.Data)
+				lz78data, intlz78 := EncodeLZ78B(job.Data)
+				bwt, pIdx := BWT(lz78data)
 				rle := PackBitsEncode(bwt)
-				lz78data, intlz78 := EncodeLZ78B(rle)
+				
 				buf := new(bytes.Buffer)
 				binary.Write(buf, binary.LittleEndian, int32(pIdx))
 				binary.Write(buf, binary.LittleEndian, int32(len(intlz78)))
-				binary.Write(buf, binary.LittleEndian, int32(len(lz78data)))
+				binary.Write(buf, binary.LittleEndian, int32(len(rle)))
 				for i :=  range intlz78 {
 					binary.Write(buf, binary.LittleEndian, int32(intlz78[i]))
 				}
-				buf.Write(lz78data)
+				buf.Write(rle)
 				results <- Result{ID: job.ID, Payload: buf.Bytes()}
 			}
 		})
@@ -248,15 +249,14 @@ func DecompressFile(file *os.File, destFile string) {
 		err = binary.Read(reader, binary.LittleEndian, &length)
 		for i := 0; i < int(intDatalen); i++ {
 			var tmp int32
-
 			err = binary.Read(reader, binary.LittleEndian, &tmp)
 			intData = append(intData, int(tmp))
 		}
-		lz78data := make([]byte, length)
-		_, err = io.ReadFull(reader, lz78data)
-		rleData := DecodeLZ78B(lz78data, intData)
+		rleData := make([]byte, length)
+		_, err = io.ReadFull(reader, rleData)
 		bwtData := PackBitsDecode(rleData)
-		realData := IBWT(bwtData, int(pIdx))
+		lz78data := IBWT(bwtData, int(pIdx))
+		realData := DecodeLZ78B(lz78data, intData)
 		extractedFile.WriteString(string(realData))
 	}
 }
