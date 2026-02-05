@@ -53,7 +53,6 @@ func BWT(input []byte) ([]byte, int) {
 	return result, primaryIndex
 }
 
-
 func IBWT(bwt []byte, primaryIndex int) []byte {
 	n := len(bwt)
 	if n == 0 {
@@ -87,9 +86,9 @@ func IBWT(bwt []byte, primaryIndex int) []byte {
 	// On part de l'index primaire et on suit les pointeurs de T
 	result := make([]byte, n)
 	var curr int
-	fmt.Println("test : ",len(T), primaryIndex, curr)
+	fmt.Println("test : ", len(T), primaryIndex, curr)
 	curr = T[primaryIndex]
-	
+
 	for i := range n {
 		result[i] = bwt[curr]
 		curr = T[curr]
@@ -137,17 +136,21 @@ func PackBitsDecode(input []byte) []byte {
 	var out []byte
 	i := 0
 	for i < len(input) {
-		header := int8(input[i]) 
+		header := int8(input[i])
 		i++
 
 		if header >= 0 {
 			count := int(header) + 1
-			if i+count > len(input) { break }
+			if i+count > len(input) {
+				break
+			}
 			out = append(out, input[i:i+count]...)
 			i += count
 		} else if header != -128 {
 			count := int(-header) + 1
-			if i >= len(input) { break }
+			if i >= len(input) {
+				break
+			}
 			val := input[i]
 			i++
 			for range count {
@@ -159,11 +162,11 @@ func PackBitsDecode(input []byte) []byte {
 }
 
 func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
-	numWorkers := runtime.NumCPU() 
+	numWorkers := runtime.NumCPU()
 	jobs := make(chan Job, numWorkers)
 	results := make(chan Result, numWorkers)
 	var wg sync.WaitGroup
-	blockSize := compressionLevel * 1024 
+	blockSize := compressionLevel * 1024
 	for range numWorkers {
 		wg.Go(func() {
 			for job := range jobs {
@@ -179,7 +182,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 	}
 
 	go func() {
-		
+
 		counter := 0
 		for {
 			buf := make([]byte, blockSize)
@@ -209,11 +212,11 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 				w.Write(data)
 				delete(pending, nextID)
 				nextID++
-				totalByteTreated+=int64(blockSize)
+				totalByteTreated += int64(blockSize)
 				elapsed := time.Since(start).Seconds()
 				if elapsed > 0 {
-					mbps := float64(totalByteTreated)/ float64(1024*1024) / elapsed
-					fmt.Printf("\rCompressed Blocks : %d \tSpeed : %.2f Mo/s\t\tElapsed Time : %s", nextID, mbps ,time.Since(start))
+					mbps := float64(totalByteTreated) / float64(1024*1024) / elapsed
+					fmt.Printf("\rCompressed Blocks : %d \tSpeed : %.2f Mo/s\t\tElapsed Time : %s", nextID, mbps, time.Since(start))
 				}
 			} else {
 				break
@@ -242,26 +245,35 @@ func DecompressFile(file *os.File, destFile string) {
 
 		rleData := make([]byte, length)
 		_, err = io.ReadFull(reader, rleData)
-		
+
 		bwtData := PackBitsDecode(rleData)
 		realData := IBWT(bwtData, int(pIdx))
 		extractedFile.WriteString(string(realData))
 	}
 }
 
-func Compress(filename string, compressionLevel int){
-	source, _ := os.Open(filename)
-	dest, _ := os.Create(filename+".combyte")
-	defer dest.Close()
+func Compress(filename string, compressionLevel int) {
+	source, err := os.Open(filename)
+	if err.Error() == fmt.Sprintf("open %s: no such file or directory", filename) {
+		fmt.Printf("Fichier %s introuvable\n", filename)
+	} else {
+		dest, _ := os.Create(filename + ".combyte")
+		defer dest.Close()
 
-	reader :=  bufio.NewReader(source)
-	writer := bufio.NewWriter(dest)
-	defer writer.Flush()
+		reader := bufio.NewReader(source)
+		writer := bufio.NewWriter(dest)
+		defer writer.Flush()
 
-	CompressFile(reader, writer, compressionLevel)
+		CompressFile(reader, writer, compressionLevel)
+	}
+
 }
 
 func Extract(filename string) {
-	source, _ := os.Open(filename)
-	DecompressFile(source, strings.Replace(filename, ".combyte", "", 1))
+	source, err := os.Open(filename)
+	if err.Error() == fmt.Sprintf("open %s: no such file or directory", filename) {
+		fmt.Printf("Fichier %s introuvable\n", filename)
+	} else {
+		DecompressFile(source, strings.Replace(filename, ".combyte", "", 1))
+	}
 }
