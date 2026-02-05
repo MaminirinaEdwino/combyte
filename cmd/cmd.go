@@ -58,32 +58,20 @@ func IBWT(bwt []byte, primaryIndex int) []byte {
 	if n == 0 {
 		return nil
 	}
-
-	// 1. Compter les occurrences de chaque byte
-	// On utilise un tableau de 256 pour couvrir tous les octets possibles
 	count := make([]int, 256)
 	for _, b := range bwt {
 		count[b]++
 	}
-
-	// 2. Calculer les positions de départ de chaque caractère dans la première colonne triée
-	// C'est ce qu'on appelle la table de cumul "C"
 	sum := 0
 	for i, c := range count {
 		count[i] = sum
 		sum += c
 	}
-
-	// 3. Construire le vecteur de transformation T (LF mapping)
-	// T[i] nous dit où se trouve le caractère bwt[i] dans la colonne triée
 	T := make([]int, n)
 	for i, b := range bwt {
 		T[count[b]] = i
 		count[b]++
 	}
-
-	// 4. Reconstruire la chaîne originale en remontant le cycle
-	// On part de l'index primaire et on suit les pointeurs de T
 	result := make([]byte, n)
 	var curr int
 	fmt.Println("test : ", len(T), primaryIndex, curr)
@@ -266,7 +254,6 @@ func Compress(filename string, compressionLevel int) {
 
 		CompressFile(reader, writer, compressionLevel)
 	}
-
 }
 
 func Extract(filename string) {
