@@ -241,40 +241,39 @@ func DecompressFile(file *os.File, destFile string) {
 }
 
 func Compress(filename string, compressionLevel int) {
-	source, err := os.Open(filename)
-	if err.Error() == fmt.Sprintf("open %s: no such file or directory", filename) {
-		fmt.Printf("Fichier %s introuvable\n", filename)
-	} else {
-		dest, _ := os.Create(filename + ".combyte")
-		defer dest.Close()
+	source, _ := os.Open(filename)
 
-		reader := bufio.NewReader(source)
-		writer := bufio.NewWriter(dest)
-		defer writer.Flush()
+	dest, _ := os.Create(filename + ".combyte")
+	defer dest.Close()
 
-		CompressFile(reader, writer, compressionLevel)
+	reader := bufio.NewReader(source)
+	writer := bufio.NewWriter(dest)
+	defer writer.Flush()
+	fileSize, fileSizeString := GetFileSize(source)
+	if fileSize < 1024*1024*1024*100 {
+		fmt.Println("Your File size is less than 100Mo")
+		fmt.Printf("%s %s (%d octets)\n", filename, fileSizeString, fileSize)
 	}
+	CompressFile(reader, writer, compressionLevel)
+
 }
 
 func Extract(filename string) {
-	source, err := os.Open(filename)
-	if err.Error() == fmt.Sprintf("open %s: no such file or directory", filename) {
-		fmt.Printf("Fichier %s introuvable\n", filename)
-	} else {
-		DecompressFile(source, strings.Replace(filename, ".combyte", "", 1))
-	}
-}
+	source, _ := os.Open(filename)
 
+	DecompressFile(source, strings.Replace(filename, ".combyte", "", 1))
+
+}
 
 func ReturnFileSizeAndUnit(fileSize int) (int, string) {
 	switch {
 	case fileSize < 1024:
 		return fileSize, fmt.Sprintf("%d octets", fileSize)
-	case fileSize < 1024 * 1024:
+	case fileSize < 1024*1024:
 		return fileSize, fmt.Sprintf("%.1f Ko", float64(fileSize)/1024)
-	case fileSize < 1024 * 1024 * 1024: 
+	case fileSize < 1024*1024*1024:
 		return fileSize, fmt.Sprintf("%.1f Mo", float64(fileSize)/(1024*1024))
-	case fileSize < 1024 * 1024 * 1024 * 1024 : 
+	case fileSize < 1024*1024*1024*1024:
 		return fileSize, fmt.Sprintf("%.1f Go", float64(fileSize)/(1024*1024*1024))
 	}
 	return 0, ""

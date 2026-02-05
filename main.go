@@ -11,22 +11,19 @@ import (
 	"github.com/common-nighthawk/go-figure"
 )
 
-const(
-	compressText = "This is the option for compressing a text file"
-	extractText = "This is the option for extracting a file .combyte"
+const (
+	compressText         = "This is the option for compressing a text file"
+	extractText          = "This is the option for extracting a file .combyte"
 	compressionLevelText = "This option is for specifying the compression level that you want (it won't affect the extraction if you're worrie dabout it)"
 )
-
-
 
 func main() {
 	// fmt.Println("Combyte CLI")
 	fmt.Println(colortext.GreenString("By Edwino Maminirina"))
 	fmt.Println(colortext.GreenString("github.com/MaminirinaEdwino"))
 	myfigure := figure.NewColorFigure("COMBYTE CLI", "standard", "GREEN", true)
-	myfigure.Print()	
+	myfigure.Print()
 	fmt.Println()
-	
 
 	compress := flag.Bool("compress", false, compressText)
 	c := flag.Bool("c", false, compressText)
@@ -37,23 +34,23 @@ func main() {
 	filename := flag.String("filename", "", "THe file that you want to extract or compress")
 	compressionLevel := flag.Int("level", 3, compressionLevelText)
 	flag.Parse()
-	switch  {
+	switch {
 	case *compress || *c:
 		if *filename == "" {
 			break
 		}
 		start := time.Now()
-		
+
 		cmd.Compress(*filename, *compressionLevel)
 		fmt.Printf(colortext.GreenString("Execution time : %s\n"), time.Since(start))
 	case *extract || *e:
 		if *filename == "" || !strings.Contains(*filename, ".combyte") {
-			fmt.Printf("%s is not a combyte file\n%s\n%s\n", colortext.RedText(*filename), colortext.RedText("Extraction aborted"),colortext.YellowText("Choose a valid file . . ."))
+			fmt.Printf("%s is not a combyte file\n%s\n%s\n", colortext.RedText(*filename), colortext.RedText("Extraction aborted"), colortext.YellowText("Choose a valid file . . ."))
 			break
 		}
 		cmd.Extract(*filename)
-	default : 
-		
+	default:
+
 		fmt.Println("Help documentation")
 		fmt.Println(`
 Command List
