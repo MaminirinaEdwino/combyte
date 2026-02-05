@@ -251,11 +251,20 @@ func Compress(filename string, compressionLevel int) {
 	defer writer.Flush()
 	fileSize, fileSizeString := GetFileSize(source)
 	if fileSize < 1024*1024*1024*100 {
+		choice := ""
 		fmt.Println("Your File size is less than 100Mo")
 		fmt.Printf("%s %s (%d octets)\n", filename, fileSizeString, fileSize)
+		for choice == "" {
+			choice = "N"
+			fmt.Print("Do you want to continue ? [o/N] : ")
+			fmt.Scan(&choice)
+		}
+		if choice == "o" {
+			
+		}
+	}else{
+		CompressFile(reader, writer, compressionLevel)
 	}
-	CompressFile(reader, writer, compressionLevel)
-
 }
 
 func Extract(filename string) {
