@@ -260,10 +260,17 @@ func Compress(filename string, compressionLevel int) {
 			fmt.Scan(&choice)
 		}
 		if choice == "o" {
+			CompressFile(reader, writer, compressionLevel)
+			resFile, _ := os.Open(filename+".combyte")
+			compressedSize, compressedSizeString := GetFileSize(resFile)
 			
+			fmt.Printf("Size of %s : %s (%d octects)\n", filename+".combyte", compressedSizeString, compressedSize)
 		}
 	}else{
 		CompressFile(reader, writer, compressionLevel)
+		resFile, _ := os.Open(filename+".combyte")
+		compressedSize, compressedSizeString := GetFileSize(resFile)
+		fmt.Printf("Size of %s : %s (%d octects)\n", filename+".combyte", compressedSizeString, compressedSize)
 	}
 }
 
