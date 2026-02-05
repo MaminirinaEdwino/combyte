@@ -264,3 +264,32 @@ func Extract(filename string) {
 		DecompressFile(source, strings.Replace(filename, ".combyte", "", 1))
 	}
 }
+
+
+func ReturnFileSizeAndUnit(fileSize int) (int, string) {
+	switch {
+	case fileSize < 1024:
+		return fileSize, fmt.Sprintf("%d octets", fileSize)
+	case fileSize < 1024 * 1024:
+		return fileSize, fmt.Sprintf("%.1f Ko", float64(fileSize)/1024)
+	case fileSize < 1024 * 1024 * 1024: 
+		return fileSize, fmt.Sprintf("%.1f Mo", float64(fileSize)/(1024*1024))
+	case fileSize < 1024 * 1024 * 1024 * 1024 : 
+		return fileSize, fmt.Sprintf("%.1f Go", float64(fileSize)/(1024*1024*1024))
+	}
+	return 0, ""
+}
+
+func GetFileSize(file *os.File) (int, string) {
+	buf := make([]byte, 1)
+	blockSize := 0
+	for {
+		_, err := file.Read(buf)
+		if err != nil {
+			break
+		} else {
+			blockSize += len(buf)
+		}
+	}
+	return ReturnFileSizeAndUnit(blockSize)
+}
