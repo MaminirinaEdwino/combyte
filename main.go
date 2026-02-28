@@ -14,7 +14,7 @@ import (
 const (
 	compressText         = "This is the option for compressing a text file"
 	extractText          = "This is the option for extracting a file .combyte"
-	compressionLevelText = "This option is for specifying the compression level that you want (it won't affect the extraction if you're worrie dabout it)"
+	compressionLevelText = "This option is for specifying the compression level that you want (it won't affect the extraction if you're worried about it)"
 )
 
 func main() {
