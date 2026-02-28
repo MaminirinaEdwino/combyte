@@ -148,13 +148,85 @@ func RLEDecode(input []byte) []byte {
 	}
 	return out
 }
+// func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
+//     numWorkers := runtime.NumCPU()
+//     jobs := make(chan Job, numWorkers)
+//     results := make(chan Result, numWorkers)
+//     var wg sync.WaitGroup
+//     blockSize := compressionLevel * 1024
+
+//     // 1. LANCER LES WORKERS
+//     for i := range numWorkers {
+//         wg.Add(1) // TOUJOURS 1 ici
+//         go func(id int) {
+//             defer wg.Done()
+			
+//             for job := range jobs {
+// 				fmt.Println("e")
+//                 // fmt.Printf("Worker %d traite le bloc %d\n", id, job.ID)
+//                 bwt, pIdx := BWT(job.Data)
+//                 rle := RLEEncode(bwt)
+                
+//                 buf := new(bytes.Buffer)
+//                 binary.Write(buf, binary.LittleEndian, int32(pIdx))
+//                 binary.Write(buf, binary.LittleEndian, int32(len(rle)))
+//                 buf.Write(rle)
+                
+//                 results <- Result{ID: job.ID, Payload: buf.Bytes()}
+//             }
+//         }(i)
+//     }
+
+//     // 2. GOROUTINE DE SURVEILLANCE
+//     go func() {
+//         wg.Wait()
+//         close(results) // Ferme les résultats quand les workers ont fini
+//     }()
+
+//     // 3. GOROUTINE DE LECTURE (Important : doit être asynchrone)
+//     go func() {
+//         counter := 0
+//         for {
+//             buf := make([]byte, blockSize)
+//             n, err := r.Read(buf)
+//             if n > 0 {
+//                 data := make([]byte, n)
+//                 copy(data, buf[:n])
+//                 jobs <- Job{ID: counter, Data: data}
+//                 counter++
+//             }
+//             if err != nil {
+//                 break
+//             }
+//         }
+//         close(jobs) // On ferme jobs pour libérer les workers du "range jobs"
+//     }()
+
+//     // 4. ÉCRITURE FINALE (Thread principal)
+//     pending := make(map[int][]byte)
+//     nextID := 0
+//     for res := range results {
+//         pending[res.ID] = res.Payload
+//         for {
+//             if data, ok := pending[nextID]; ok {
+//                 w.Write(data)
+//                 delete(pending, nextID)
+//                 nextID++
+//             } else {
+//                 break
+//             }
+//         }
+//     }
+// }
 
 func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
+
 	numWorkers := runtime.NumCPU()
 	jobs := make(chan Job, numWorkers)
 	results := make(chan Result, numWorkers)
 	var wg sync.WaitGroup
 	blockSize := compressionLevel * 1024
+
 	for range numWorkers {
 		wg.Go(func() {
 			for job := range jobs {
@@ -250,7 +322,8 @@ func Compress(filename string, compressionLevel int) {
 	writer := bufio.NewWriter(dest)
 	defer writer.Flush()
 	fileSize, fileSizeString := GetFileSize(source)
-	if fileSize <= 1024*1024*1024*100 {
+	CompressFile(reader, writer, compressionLevel)
+	if fileSize <= 1024*1024*100 {
 		// choice := ""
 		fmt.Println("Your File size is less than 100Mo")
 		fmt.Printf("%s %s (%d octets)\n", filename, fileSizeString, fileSize)
@@ -263,16 +336,17 @@ func Compress(filename string, compressionLevel int) {
 		// 	CompressFile(reader, writer, compressionLevel)
 		// 	resFile, _ := os.Open(filename+".combyte")
 		// 	compressedSize, compressedSizeString := GetFileSize(resFile)
-			
+
 		// 	fmt.Printf("Size of %s : %s (%d octets)\n", filename+".combyte", compressedSizeString, compressedSize)
 		// }
-		
-	}else{
-		CompressFile(reader, writer, compressionLevel)
-		resFile, _ := os.Open(filename+".combyte")
+
+	} else {
+		// CompressFile(reader, writer, compressionLevel)
+		resFile, _ := os.Open(filename + ".combyte")
 		compressedSize, compressedSizeString := GetFileSize(resFile)
 		fmt.Printf("Size of %s : %s (%d octets)\n", filename+".combyte", compressedSizeString, compressedSize)
 	}
+
 }
 
 func Extract(filename string) {
@@ -297,15 +371,9 @@ func ReturnFileSizeAndUnit(fileSize int) (int, string) {
 }
 
 func GetFileSize(file *os.File) (int, string) {
-	buf := make([]byte, 1)
-	blockSize := 0
-	for {
-		_, err := file.Read(buf)
-		if err != nil {
-			break
-		} else {
-			blockSize += len(buf)
-		}
-	}
-	return ReturnFileSizeAndUnit(blockSize)
+    info, err := file.Stat()
+    if err != nil {
+        return 0, "0 octets"
+    }
+    return ReturnFileSizeAndUnit(int(info.Size()))
 }
