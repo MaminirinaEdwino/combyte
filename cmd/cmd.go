@@ -74,7 +74,7 @@ func IBWT(bwt []byte, primaryIndex int) []byte {
 	}
 	result := make([]byte, n)
 	var curr int
-	fmt.Println("test : ", len(T), primaryIndex, curr)
+	// fmt.Println("test : ", len(T), primaryIndex, curr)
 	curr = T[primaryIndex]
 
 	for i := range n {

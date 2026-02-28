@@ -48,7 +48,9 @@ func main() {
 			fmt.Printf("%s is not a combyte file\n%s\n%s\n", colortext.RedText(*filename), colortext.RedText("Extraction aborted"), colortext.YellowText("Choose a valid file . . ."))
 			break
 		}
+		start := time.Now()
 		cmd.Extract(*filename)
+		fmt.Printf(colortext.GreenString("Execution time : %s\n"), time.Since(start))
 	default:
 
 		fmt.Println("Help documentation")
