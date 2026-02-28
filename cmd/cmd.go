@@ -85,7 +85,7 @@ func IBWT(bwt []byte, primaryIndex int) []byte {
 	return result
 }
 
-func PackBitsEncode(input []byte) []byte {
+func RLEEncode(input []byte) []byte {
 	var out []byte
 	i := 0
 	n := len(input)
@@ -120,7 +120,7 @@ func PackBitsEncode(input []byte) []byte {
 	return out
 }
 
-func PackBitsDecode(input []byte) []byte {
+func RLEDecode(input []byte) []byte {
 	var out []byte
 	i := 0
 	for i < len(input) {
@@ -159,7 +159,7 @@ func CompressFile(r io.Reader, w io.Writer, compressionLevel int) {
 		wg.Go(func() {
 			for job := range jobs {
 				bwt, pIdx := BWT(job.Data)
-				rle := PackBitsEncode(bwt)
+				rle := RLEEncode(bwt)
 				buf := new(bytes.Buffer)
 				binary.Write(buf, binary.LittleEndian, int32(pIdx))
 				binary.Write(buf, binary.LittleEndian, int32(len(rle)))
@@ -234,7 +234,7 @@ func DecompressFile(file *os.File, destFile string) {
 		rleData := make([]byte, length)
 		_, err = io.ReadFull(reader, rleData)
 
-		bwtData := PackBitsDecode(rleData)
+		bwtData := RLEDecode(rleData)
 		realData := IBWT(bwtData, int(pIdx))
 		extractedFile.WriteString(string(realData))
 	}
@@ -250,27 +250,28 @@ func Compress(filename string, compressionLevel int) {
 	writer := bufio.NewWriter(dest)
 	defer writer.Flush()
 	fileSize, fileSizeString := GetFileSize(source)
-	if fileSize < 1024*1024*1024*100 {
-		choice := ""
+	if fileSize <= 1024*1024*1024*100 {
+		// choice := ""
 		fmt.Println("Your File size is less than 100Mo")
 		fmt.Printf("%s %s (%d octets)\n", filename, fileSizeString, fileSize)
-		for choice == "" {
-			choice = "N"
-			fmt.Print("Do you want to continue ? [o/N] : ")
-			fmt.Scan(&choice)
-		}
-		if choice == "o" {
-			CompressFile(reader, writer, compressionLevel)
-			resFile, _ := os.Open(filename+".combyte")
-			compressedSize, compressedSizeString := GetFileSize(resFile)
+		// for choice == "" {
+		// 	choice = "N"
+		// 	fmt.Print("Do you want to continue ? [o/N] : ")
+		// 	fmt.Scan(&choice)
+		// }
+		// if choice == "o" {
+		// 	CompressFile(reader, writer, compressionLevel)
+		// 	resFile, _ := os.Open(filename+".combyte")
+		// 	compressedSize, compressedSizeString := GetFileSize(resFile)
 			
-			fmt.Printf("Size of %s : %s (%d octects)\n", filename+".combyte", compressedSizeString, compressedSize)
-		}
+		// 	fmt.Printf("Size of %s : %s (%d octets)\n", filename+".combyte", compressedSizeString, compressedSize)
+		// }
+		
 	}else{
 		CompressFile(reader, writer, compressionLevel)
 		resFile, _ := os.Open(filename+".combyte")
 		compressedSize, compressedSizeString := GetFileSize(resFile)
-		fmt.Printf("Size of %s : %s (%d octects)\n", filename+".combyte", compressedSizeString, compressedSize)
+		fmt.Printf("Size of %s : %s (%d octets)\n", filename+".combyte", compressedSizeString, compressedSize)
 	}
 }
 
